@@ -12,7 +12,7 @@ q_proton = 1.602e-19 #charge of a proton
 q_electron = -1.602e-19 #charge of an electron
 
 proton_position = [1, 0, 0]
-electron_position = [1, 0 , 0]
+electron_position = [-1, 0 , 0]
 
 #define a grid of points in 3D space
 x = np.linspace(-2, 2, 10).astype(float)
@@ -47,13 +47,13 @@ def plot_3D():
 
     #create the figure and add the arrows/proton/electron
     figure = go.Figure()
-    figure.add_trace(go.Cone(x=X.flatten(), y=Y.flatten(), z=Z.flatten(), u=Ex.flatten(), v=Ey.flatten(), w=Ez.flatten(), sizemode="scaled", sizeref=0.1, anchor="tail", colorscale="Blues", showscale=False))
-    figure.add_trace(go.Scatter3d(x=[proton_position[0]], y=[proton_position[1]], z=[proton_position[2]], mode="markers", marker=dict(size=5, color="red"), name="Proton"))
-    figure.add_trace(go.Scatter3d(x=[electron_position[0]], y=[electron_position[1]], z=[electron_position[2]], mode="markers", marker=dict(size=5, color="green"), name="Electron"))
+    figure.add_trace(go.Cone(x=X.flatten(), y=Y.flatten(), z=Z.flatten(), u=Ex.flatten(), v=Ey.flatten(), w=Ez.flatten(), sizemode="scaled", sizeref=0.6, anchor="tail", opacity=1, colorscale="Blues", showscale=False))
+    figure.add_trace(go.Scatter3d(x=[proton_position[0]], y=[proton_position[1]], z=[proton_position[2]], mode="markers", marker=dict(size=15, color="red"), name="Proton"))
+    figure.add_trace(go.Scatter3d(x=[electron_position[0]], y=[electron_position[1]], z=[electron_position[2]], mode="markers", marker=dict(size=15, color="green"), name="Electron"))
 
     #create and update the layout of the figure
-    scene_dict = dict(xaxis=dict(nticks=4, range=[-2, 2]), yaxis=dict(nticks=4, range=[-2, 2]), zaxis=dict(nticks=4, range=[-2, 2]))
-    figure.update_layout(scene=scene_dict, title="Electric Field of a proton and an electron", width=1000, height=1000)
+    scene_dict = dict(xaxis=dict(nticks=10, range=[-2, 2]), yaxis=dict(nticks=10, range=[-2, 2]), zaxis=dict(nticks=10, range=[-1, 1]))
+    figure.update_layout(scene=scene_dict, title="Electric Field of a proton and an electron", width=1300, height=1300)
 
     #return the figure we created using pio.to_html
     return pio.to_html(figure, full_html=False)
@@ -61,7 +61,7 @@ def plot_3D():
 @app.route('/')
 def index():
     plot_html = plot_3D()
-    return render_template("PhysicsProject/index.html", plot=plot_html)
+    return render_template("index.html", plot=plot_html)
 
 if __name__ == "__main__":
     app.run(debug=True)
