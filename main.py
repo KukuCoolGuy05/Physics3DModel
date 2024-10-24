@@ -1,27 +1,24 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import tkinter as tk
+from flask import Flask, render_template
+import plotly.graph_objects as go
+import plotly.io as pio
+
+#create flask for calling the graph on a website
+app = Flask(__name__)
 
 #variables holding all of the constants that is required for this project
 k_e = 8.99e9 #Coulomb constant
 q_proton = 1.602e-19 #charge of a proton
 q_electron = -1.602e-19 #charge of an electron
 
-proton_position = np.array([1, 0, 0])
-electron_position = np.array([-1, 0, 0])
-proton_visible = True
-electron_visible = True
+proton_position = [1, 0, 0]
+electron_position = [1, 0 , 0]
 
 #define a grid of points in 3D space
-x = np.linspace(-2, 2, 10)
-y = np.linspace(-2, 2, 10)
-z = np.linspace(-2, 2, 10)
+x = np.linspace(-2, 2, 10).astype(float)
+y = np.linspace(-2, 2, 10).astype(float)
+z = np.linspace(-2, 2, 10).astype(float)
 X, Y, Z = np.meshgrid(x, y, z) #final grid we want to graph on 
-
-#create a 3D plot for the electric field
-fig = plt.figure(figsize=(15, 15))
-ax = fig.add_subplot(111, projection='3d')
 
 #function to calculate electric field
 def electric_field(q, r_charge, X, Y, Z):
@@ -39,71 +36,32 @@ def electric_field(q, r_charge, X, Y, Z):
     return Ex, Ey, Ez
 
 def plot_3D():
-    global proton_visible, electron_visible, fig, ax
-
-    #clear the previous graph
-    ax.clear()
-
     #electric field due to the proton and electron, call it using the constants we have defined above
-    Ex_proton, Ey_proton, Ez_proton = 0, 0, 0
-    Ex_electron, Ey_electron, Ez_electron = 0, 0, 0
-
-    #check whether the proton or electon is visible on the grid and update accordingly
-    if proton_visible:
-        ax.scatter(*proton_position, color="red", s=100, label="Proton")
-        Ex_proton, Ey_proton, Ez_proton = electric_field(q_proton, proton_position, X, Y, Z)
-    if electron_visible:
-        ax.scatter(*electron_position, color="green", s=100, label="Electron")
-        Ex_electron, Ey_electron, Ez_electron = electric_field(q_electron, electron_position, X, Y, Z)
-
-    #total electric field, add the electric feild of proton and electron
+    Ex_proton, Ey_proton, Ez_proton = electric_field(q_proton, proton_position, X, Y, Z)
+    Ex_electron, Ey_electron, Ez_electron = electric_field(q_electron, electron_position, X, Y, Z)
+    
+    #the final electric field should be the sum of both proton's and electron's electric field
     Ex = Ex_proton + Ex_electron
     Ey = Ey_proton + Ey_electron
     Ez = Ez_proton + Ez_electron
 
-    #plotting vector using quiver, and proton/electron on the grid as well
-    ax.quiver(X, Y, Z, Ex, Ey, Ez, length=0.15, normalize=True, color='blue')
+    #create the figure and add the arrows/proton/electron
+    figure = go.Figure()
+    figure.add_trace(go.Cone(x=X.flatten(), y=Y.flatten(), z=Z.flatten(), u=Ex.flatten(), v=Ey.flatten(), w=Ez.flatten(), sizemode="scaled", sizeref=0.1, anchor="tail", colorscale="Blues", showscale=False))
+    figure.add_trace(go.Scatter3d(x=[proton_position[0]], y=[proton_position[1]], z=[proton_position[2]], mode="markers", marker=dict(size=5, color="red"), name="Proton"))
+    figure.add_trace(go.Scatter3d(x=[electron_position[0]], y=[electron_position[1]], z=[electron_position[2]], mode="markers", marker=dict(size=5, color="green"), name="Electron"))
 
-    #set plot limits
-    ax.set_xlim([-2, 2])
-    ax.set_ylim([-2, 2])
-    ax.set_zlim([-2, 2])
+    #create and update the layout of the figure
+    scene_dict = dict(xaxis=dict(nticks=4, range=[-2, 2]), yaxis=dict(nticks=4, range=[-2, 2]), zaxis=dict(nticks=4, range=[-2, 2]))
+    figure.update_layout(scene=scene_dict, title="Electric Field of a proton and an electron", width=1000, height=1000)
 
-    #set x, y, x labels and the title for the 3D graph
-    ax.set_xlabel("x")
-    ax.set_ylabel("Y")
-    ax.set_zlabel("Z")
-    ax.set_title("Electric Field of a Proton and Electron")
+    #return the figure we created using pio.to_html
+    return pio.to_html(figure, full_html=False)
 
-    #plot the graph with the legend
-    ax.legend()
-    plt.show() 
+@app.route('/')
+def index():
+    plot_html = plot_3D()
+    return render_template("PhysicsProject/index.html", plot=plot_html)
 
-#toggle proton on and off, update the grid
-def toggle_proton():
-    global proton_visible
-    proton_visible = not proton_visible
-    plot_3D()
-
-#toggle electron on and off,, update the grid
-def toggle_electron():
-    global electron_visible
-    electron_visible = not electron_visible
-    plot_3D() 
-
-# Create the main Tkinter window
-root = tk.Tk()
-root.title("Electric Field Visualizer")
-
-# Create buttons to toggle visibility
-btn_toggle_proton = tk.Button(root, text="Toggle Proton", command=toggle_proton)
-btn_toggle_proton.pack(pady=20)
-
-btn_toggle_electron = tk.Button(root, text="Toggle Electron", command=toggle_electron)
-btn_toggle_electron.pack(pady=20)
-
-# Start plotting the field initially
-plot_3D()
-
-# Start the Tkinter event loop
-root.mainloop()
+if __name__ == "__main__":
+    app.run(debug=True)
