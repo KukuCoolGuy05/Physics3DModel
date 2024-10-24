@@ -19,6 +19,10 @@ y = np.linspace(-2, 2, 10)
 z = np.linspace(-2, 2, 10)
 X, Y, Z = np.meshgrid(x, y, z) #final grid we want to graph on 
 
+#create a 3D plot for the electric field
+fig = plt.figure(figsize=(15, 15))
+ax = fig.add_subplot(111, projection='3d')
+
 #function to calculate electric field
 def electric_field(q, r_charge, X, Y, Z):
     #distance vectors for x, y, z
@@ -35,30 +39,30 @@ def electric_field(q, r_charge, X, Y, Z):
     return Ex, Ey, Ez
 
 def plot_3D():
-    global proton_visible, electron_visible
+    global proton_visible, electron_visible, fig, ax
+
+    #clear the previous graph
+    ax.clear()
 
     #electric field due to the proton and electron, call it using the constants we have defined above
-    Ex_proton, Ey_proton, Ez_proton = electric_field(q_proton, proton_position, X, Y, Z)
-    Ex_electron, Ey_electron, Ez_electron = electric_field(q_electron, electron_position, X, Y, Z)
+    Ex_proton, Ey_proton, Ez_proton = 0, 0, 0
+    Ex_electron, Ey_electron, Ez_electron = 0, 0, 0
+
+    #check whether the proton or electon is visible on the grid and update accordingly
+    if proton_visible:
+        ax.scatter(*proton_position, color="red", s=100, label="Proton")
+        Ex_proton, Ey_proton, Ez_proton = electric_field(q_proton, proton_position, X, Y, Z)
+    if electron_visible:
+        ax.scatter(*electron_position, color="green", s=100, label="Electron")
+        Ex_electron, Ey_electron, Ez_electron = electric_field(q_electron, electron_position, X, Y, Z)
 
     #total electric field, add the electric feild of proton and electron
     Ex = Ex_proton + Ex_electron
     Ey = Ey_proton + Ey_electron
     Ez = Ez_proton + Ez_electron
 
-    #create a 3D plot for the electric field
-    plt.clf()
-    fig = plt.figure(figsize=(15, 15))
-    ax = fig.add_subplot(111, projection='3d')
-
     #plotting vector using quiver, and proton/electron on the grid as well
     ax.quiver(X, Y, Z, Ex, Ey, Ez, length=0.15, normalize=True, color='blue')
-
-    #check whether the proton or electon is visible on the grid and update accordingly
-    if proton_visible:
-        ax.scatter(*proton_position, color="red", s=100, label="Proton")
-    if electron_visible:
-        ax.scatter(*electron_position, color="green", s=100, label="Electron")
 
     #set plot limits
     ax.set_xlim([-2, 2])
@@ -93,10 +97,10 @@ root.title("Electric Field Visualizer")
 
 # Create buttons to toggle visibility
 btn_toggle_proton = tk.Button(root, text="Toggle Proton", command=toggle_proton)
-btn_toggle_proton.pack(pady=10)
+btn_toggle_proton.pack(pady=20)
 
 btn_toggle_electron = tk.Button(root, text="Toggle Electron", command=toggle_electron)
-btn_toggle_electron.pack(pady=10)
+btn_toggle_electron.pack(pady=20)
 
 # Start plotting the field initially
 plot_3D()
