@@ -100,28 +100,34 @@ def plot_3D(show_proton=True, show_electron=True):
 
     #create and update the layout of the figure
     scene_dict = dict(xaxis=dict(range=[-75, 75]), yaxis=dict(range=[-75, 75]), zaxis=dict(range=[-75, 75], backgroundcolor="rgba(222, 226, 230, 1)"))
-    figure.update_layout(scene=scene_dict, width=1000, height=1000, paper_bgcolor='rgba(222, 226, 230, 1)', plot_bgcolor='rgba(222, 226, 230, 1)')
+    figure.update_layout(scene=scene_dict, width=1000, height=1000, paper_bgcolor='rgba(222, 226, 230, 1)', plot_bgcolor='rgba(222, 226, 230, 1)', uirevision=True, transition_duration=0)
 
     #return the figure we created
-    return figure
-
-def plot_3D_pio(show_proton=True, show_electron=True):
-    figure = plot_3D(show_proton, show_electron)
-    return pio.to_html(figure, full_html=False)
+    return pio.to_html(
+        figure,
+        full_html=False,
+        include_plotlyjs='cdn',
+        config={
+            'displayModeBar': True,
+            'responsive': True,
+            'scrollZoom': True
+        }
+    )
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        data = request.get_json()
-        show_proton = data.get('proton', True)
-        show_electron = data.get('electron', True)
-        # Return the HTML string directly
-        plot_html = plot_3D(show_proton, show_electron)
-        return jsonify({'plot': plot_html})
+        try:
+            data = request.get_json()
+            show_proton = data.get('proton', True)
+            show_electron = data.get('electron', True)
+            plot_html = plot_3D(show_proton, show_electron)
+            return jsonify({'plot': plot_html, 'status': 'success'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
     else:
-        show_proton = request.args.get('proton', 'true').lower() == 'true'
-        show_electron = request.args.get('electron', 'true').lower() == 'true'
-        plot_html = plot_3D(show_proton, show_electron)
+        # Initial load
+        plot_html = plot_3D(True, True)
         return render_template("index.html", plot=plot_html)
 
 @app.route("/gaussian_surfaces")

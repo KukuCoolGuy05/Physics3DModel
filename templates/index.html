@@ -161,10 +161,16 @@
     </div>
 
     <script>
+        let isUpdating = false;
+
         async function updatePlot() {
+            if (isUpdating) return;
+            isUpdating = true;
+
             try {
                 const protonChecked = document.getElementById("proton-toggle").checked;
                 const electronChecked = document.getElementById("electron-toggle").checked;
+                const plotContainer = document.getElementById("plot-container");
 
                 const response = await fetch('/', {
                     method: 'POST',
@@ -182,19 +188,45 @@
                 }
 
                 const data = await response.json();
-                // Replace the plot container's content with the new HTML
-                document.getElementById("plot-container").innerHTML = data.plot;
+
+                // Create a temporary container to hold the new plot
+                const tempContainer = document.createElement('div');
+                tempContainer.innerHTML = data.plot;
+
+                // Replace the old plot with the new one
+                plotContainer.replaceWith(tempContainer.firstChild);
+
             } catch (error) {
                 console.error('Error updating plot:', error);
+            } finally {
+                isUpdating = false;
             }
         }
 
-        //add event listeners to toggles
-        document.getElementById("proton-toggle").addEventListener("change", updatePlot);
-        document.getElementById("electron-toggle").addEventListener("change", updatePlot);
+        // Debounce function to prevent rapid updates
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
 
-        //initial plot
-        updatePlot();
+        // Debounced update function
+        const debouncedUpdate = debounce(updatePlot, 250);
+
+        // Add event listeners to toggles
+        document.getElementById("proton-toggle").addEventListener("change", debouncedUpdate);
+        document.getElementById("electron-toggle").addEventListener("change", debouncedUpdate);
+
+        // Prevent default form submission and page reload
+        document.addEventListener('submit', (e) => {
+            e.preventDefault();
+        });
     </script>
 </body>
 
