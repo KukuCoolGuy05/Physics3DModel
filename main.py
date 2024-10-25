@@ -53,23 +53,23 @@ def plot_3D():
 
     #create and update the layout of the figure
     scene_dict = dict(xaxis=dict(nticks=15, range=[-2, 2]), yaxis=dict(nticks=15, range=[-2, 2]), zaxis=dict(nticks=15, range=[-1, 1]))
-    figure.update_layout(scene=scene_dict, width=1300, height=1300)
+    figure.update_layout(scene=scene_dict, width=1150, height=1150)
 
     #return the figure we created using pio.to_html
     return pio.to_html(figure, full_html=False)
 
-@app.route('/')
+@app.route("/")
 def index():
     plot_html = plot_3D()
     return render_template("index.html", plot=plot_html)
 
-@app.route('/gaussian_surfaces')
+@app.route("/gaussian_surfaces")
 def gaussian_surfaces():
-    return render_template('GaussianSurfaces.html')
+    return render_template("GaussianSurfaces.html")
 
-@app.route('/wires')
+@app.route("/wires")
 def wires():
-    return render_template('Wires.html')
+    return render_template("Wires.html")
 
 if __name__ == "__main__":
     app.run(debug=True)

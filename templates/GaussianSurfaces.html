@@ -7,56 +7,69 @@
     <title>Electric Field Visualizer</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-        * {
+        *{
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            background-color: #6c757d;
         }
 
-        #banner {
-            background-color: #adb5bd;
+        body{
+            background-color: #dee2e6;
+        }
+
+        #banner{
+            background-color: #212529;
             border-bottom: 2px solid #333;
             padding: 20px;
             text-align: center;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        #banner h1 {
+        #banner h1{
             font-size: 2em;
-            color: #212529;
+            color: #adb5bd;
             margin-bottom: 10px;
         }
 
-        #pages {
+        #page{
             list-style-type: none;
             display: flex;
             justify-content: center;
             gap: 20px;
         }
 
-        #pages li {
+        #pages a{
+        text-decoration: none;
+        color: inherit;
+        }
+
+        #pages li{
             font-size: 1.2em;
             color: #0077b6;
             cursor: pointer;
             transition: color 0.3s ease;
+            list-style-type: none;
+            display: inline-block;
+            padding: 0.5em 1em 0.5em 1em;
         }
 
-        #pages li:hover {
-            color: #1abc9c;
+        #pages li:hover{
+            color: #f8f9fa;
         }
     </style>
 </head>
 
 <body>
     <div id="banner">
-        <h1>Electric Field Of Various Gaussian Surfaces</h1>
+        <h1>Electric Field Of A Gaussian Surface</h1>
         <ul id="pages">
-            <li><a href="index.html">Proton/Electron</a></li>
-            <li><a href="GaussianSurfaces.html">Gaussian surfaces</a></li>
-            <li><a href="Wires.html">Wires</a></li>
+            <li><a href="/">Proton/Electron</a></li>
+            <li><a href="/gaussian_surfaces">Gaussian surfaces</a></li>
+            <li><a href="/wires">Wires</a></li>
         </ul>
     </div>
-    <div>
+    <div id = "figure">
         {{ plot | safe }}
     </div>
 </body>
