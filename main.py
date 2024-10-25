@@ -99,18 +99,30 @@ def plot_3D(show_proton=True, show_electron=True):
     figure.add_trace(go.Scatter3d(x=[electron_position[0]], y=[electron_position[1]], z=[electron_position[2]], mode="markers", marker=dict(size=10, color="green"), name="Electron"))
 
     #create and update the layout of the figure
-    scene_dict = dict(xaxis=dict(range=[-100, 100]), yaxis=dict(range=[-100, 100]), zaxis=dict(range=[-100, 100], backgroundcolor="rgba(222, 226, 230, 1)"))
+    scene_dict = dict(xaxis=dict(range=[-75, 75]), yaxis=dict(range=[-75, 75]), zaxis=dict(range=[-75, 75], backgroundcolor="rgba(222, 226, 230, 1)"))
     figure.update_layout(scene=scene_dict, width=1000, height=1000, paper_bgcolor='rgba(222, 226, 230, 1)', plot_bgcolor='rgba(222, 226, 230, 1)')
 
-    #return the figure we created using pio.to_html
+    #return the figure we created
+    return figure
+
+def plot_3D_pio(show_proton=True, show_electron=True):
+    figure = plot_3D(show_proton, show_electron)
     return pio.to_html(figure, full_html=False)
 
-@app.route("/")
+@app.route("/", methods=['GET', 'POST'])
 def index():
-    show_proton = request.args.get('proton', 'true').lower() == 'true'
-    show_electron = request.args.get('electron', 'true').lower() == 'true'
-    plot_html = plot_3D(show_proton, show_electron)
-    return render_template("index.html", plot=plot_html)
+    if request.method == 'POST':
+        data = request.get_json()
+        show_proton = data.get('proton', True)
+        show_electron = data.get('electron', True)
+        # Return the HTML string directly
+        plot_html = plot_3D(show_proton, show_electron)
+        return jsonify({'plot': plot_html})
+    else:
+        show_proton = request.args.get('proton', 'true').lower() == 'true'
+        show_electron = request.args.get('electron', 'true').lower() == 'true'
+        plot_html = plot_3D(show_proton, show_electron)
+        return render_template("index.html", plot=plot_html)
 
 @app.route("/gaussian_surfaces")
 def gaussian_surfaces():

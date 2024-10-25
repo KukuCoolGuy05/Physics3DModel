@@ -161,19 +161,39 @@
     </div>
 
     <script>
-        function updatePlot() {
-            const protonChecked = document.getElementById("proton-toggle").checked;
-            const electronChecked = document.getElementById("electron-toggle").checked;
-            const response = await fetch('/', {method: 'POST',headers: {'Content-Type': 'application/json'}, body: JSON.stringify({proton: protonChecked, electron: electronChecked})});
-            const plotData = await response.json();
-            Plotly.newPlot('plot-container', plotData.data, plotData.layout);
+        async function updatePlot() {
+            try {
+                const protonChecked = document.getElementById("proton-toggle").checked;
+                const electronChecked = document.getElementById("electron-toggle").checked;
+
+                const response = await fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        proton: protonChecked,
+                        electron: electronChecked
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                // Replace the plot container's content with the new HTML
+                document.getElementById("plot-container").innerHTML = data.plot;
+            } catch (error) {
+                console.error('Error updating plot:', error);
+            }
         }
 
-        // Add event listeners to toggles
+        //add event listeners to toggles
         document.getElementById("proton-toggle").addEventListener("change", updatePlot);
         document.getElementById("electron-toggle").addEventListener("change", updatePlot);
 
-        // Initial plot
+        //initial plot
         updatePlot();
     </script>
 </body>
