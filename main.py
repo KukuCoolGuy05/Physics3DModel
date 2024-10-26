@@ -21,9 +21,21 @@ def index():
         plot_html = extention.plot_3D(True, True)
         return render_template("index.html", plot=plot_html)
 
-@app.route("/gaussian_surfaces")
+@app.route("/gaussian_surfaces", methods=['GET', 'POST'])
 def gaussian_surfaces():
-    return render_template("GaussianSurfaces.html")
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            surface_type = data.get('surface_type', 'sphere')
+            radius = float(data.get('radius', 25))
+            charge = float(data.get('charge', q_proton))
+            plot_html = extention.plot_gaussian_surface(surface_type, radius, charge)
+            return jsonify({'plot': plot_html, 'status': 'success'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
+    else:
+        plot_html = extention.plot_gaussian_surface()
+        return render_template("GaussianSurfaces.html", plot=plot_html)
 
 @app.route("/wires")
 def wires():

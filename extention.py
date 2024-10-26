@@ -54,6 +54,36 @@ def scale_vectors(Ex, Ey, Ez):
     
     return Ex_scaled, Ey_scaled, Ez_scaled, relative_magnitudes
 
+def gaussian_electric_field(surface_type, r_point, q, X, Y, Z):
+    #distance vectors for x, y, z (reusing your existing pattern)
+    Rx = X - r_point[0]
+    Ry = Y - r_point[1]
+    Rz = Z - r_point[2]
+    R = np.sqrt(Rx**2 + Ry**2 + Rz**2)
+    R[R < 1e-10] = 1e-10
+    
+    #calculate electric field for each surface
+    if surface_type == "sphere":
+        Ex = k_e * q * Rx / R**3
+        Ey = k_e * q * Ry / R**3
+        Ez = k_e * q * Rz / R**3
+        
+    elif surface_type == "cylinder":
+        Rxy = np.sqrt(Rx**2 + Ry**2)
+        Rxy[Rxy < 1e-10] = 1e-10
+        
+        # Only radial component in xy-plane
+        Ex = k_e * q * Rx / (Rxy * R**2)
+        Ey = k_e * q * Ry / (Rxy * R**2)
+        Ez = np.zeros_like(Z)
+        
+    elif surface_type == "plane":
+        Ex = np.zeros_like(X)
+        Ey = np.zeros_like(Y)
+        Ez = np.sign(Rz) * k_e * q / R**2
+        
+    return Ex, Ey, Ez
+
 def plot_3D(show_proton=True, show_electron=True):
     #electric field components initialized to zero
     Ex = np.zeros_like(X)
@@ -113,6 +143,91 @@ def plot_3D(show_proton=True, show_electron=True):
         return figure.to_json()
     
     #return the figure we created
+    return pio.to_html(
+        figure,
+        full_html=False,
+        include_plotlyjs='cdn',
+        config={
+            'displayModeBar': True,
+            'responsive': True,
+            'scrollZoom': True
+        }
+    )
+
+#create a new figure that will display the gaussian surface and its electric field
+def plot_gaussian_surface(surface_type='sphere', radius=25, charge=q_proton):    
+    # Calculate electric field
+    r_point = [0, 0, 0]  # Center point for field calculation
+    Ex, Ey, Ez = gaussian_electric_field(surface_type, r_point, charge, X, Y, Z)
+    
+    #scale vectors using your existing function
+    Ex_norm, Ey_norm, Ez_norm, relative_magnitudes = scale_vectors(Ex, Ey, Ez)
+    
+    #create figure
+    figure = go.Figure()
+    
+    #add electric field arrows
+    for i in range(len(X.flatten())):
+        x_start = X.flatten()[i]
+        y_start = Y.flatten()[i]
+        z_start = Z.flatten()[i]
+        
+        x_end = x_start + Ex_norm.flatten()[i]
+        y_end = y_start + Ey_norm.flatten()[i]
+        z_end = z_start + Ez_norm.flatten()[i]
+        
+        magnitude = relative_magnitudes.flatten()[i]
+        if magnitude > 0.1:
+            figure.add_trace(go.Scatter3d(x=[x_start, x_end], y=[y_start, y_end], z=[z_start, z_end], mode="lines+markers", line=dict(color="blue", width=2.5), marker=dict(size=[0, 4]), showlegend=False))
+    
+    #add Gaussian surface visualization
+    theta = np.linspace(0, 2*np.pi, 50)
+    phi = np.linspace(0, np.pi, 50)
+    theta, phi = np.meshgrid(theta, phi)
+    
+    if surface_type == 'sphere':
+        x_surf = radius * np.sin(phi) * np.cos(theta)
+        y_surf = radius * np.sin(phi) * np.sin(theta)
+        z_surf = radius * np.cos(phi)
+        
+    elif surface_type == 'cylinder':
+        h = np.linspace(-50, 50, 50)
+        theta, h = np.meshgrid(theta, h)
+        x_surf = radius * np.cos(theta)
+        y_surf = radius * np.sin(theta)
+        z_surf = h
+        
+    elif surface_type == 'plane':
+        x_surf = np.linspace(-50, 50, 50)
+        y_surf = np.linspace(-50, 50, 50)
+        x_surf, y_surf = np.meshgrid(x_surf, y_surf)
+        z_surf = np.full_like(x_surf, radius)
+    
+    figure.add_trace(go.Surface(
+        x=x_surf, y=y_surf, z=z_surf,
+        opacity=0.3,
+        showscale=False,
+        name=f"{surface_type.title()} Gaussian Surface"
+    ))
+    
+    # Use your existing layout setup
+    scene_dict = dict(
+        xaxis=dict(range=[-75, 75]),
+        yaxis=dict(range=[-75, 75]),
+        zaxis=dict(range=[-75, 75]),
+        bgcolor="rgba(222, 226, 230, 1)"
+    )
+    
+    figure.update_layout(
+        scene=scene_dict,
+        width=1000,
+        height=1000,
+        paper_bgcolor='rgba(222, 226, 230, 1)',
+        plot_bgcolor='rgba(222, 226, 230, 1)',
+        uirevision=True,
+        transition_duration=0
+    )
+    
     return pio.to_html(
         figure,
         full_html=False,

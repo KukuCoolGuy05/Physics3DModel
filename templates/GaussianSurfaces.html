@@ -74,9 +74,50 @@
             <li><a href="/wires">Wires</a></li>
         </ul>
     </div>
-    <div id = "figure">
+    <div class="controls">
+        <div>
+            <label for="surface-type">Surface Type:</label>
+            <select id="surface-type">
+                <option value="sphere">Sphere</option>
+                <option value="cylinder">Cylinder</option>
+                <option value="plane">Plane</option>
+            </select>
+        </div>
+        <div>
+            <label for="radius">Radius (m):</label>
+            <input type="number" id="radius" value="25" step="5">
+        </div>
+        <div>
+            <label for="charge">Charge (C):</label>
+            <input type="number" id="charge" value="1.602e-19" step="1.602e-19">
+        </div>
+        <button onclick="updatePlot()">Update Plot</button>
+    </div>
+    
+    <div id="plot-container">
         {{ plot | safe }}
     </div>
+    <script>
+        function updatePlot() {
+            const data = {
+                surface_type: document.getElementById('surface-type').value,
+                radius: parseFloat(document.getElementById('radius').value),
+                charge: parseFloat(document.getElementById('charge').value)
+            };
+
+            $.ajax({
+                url: '/gaussian_surfaces',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                success: function(response) {
+                    if (response.status === 'success') {
+                        document.getElementById('plot-container').innerHTML = response.plot;
+                    }
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>
