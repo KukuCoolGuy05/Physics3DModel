@@ -188,13 +188,13 @@
                 }
 
                 const data = await response.json();
+                const plotData = JSON.parse(data.plot);
 
-                // Create a temporary container to hold the new plot
-                const tempContainer = document.createElement('div');
-                tempContainer.innerHTML = data.plot;
-
-                // Replace the old plot with the new one
-                plotContainer.replaceWith(tempContainer.firstChild);
+                //update the existing plot with new data
+                const plotElement = document.querySelector('.js-plotly-plot');
+                if (plotElement) {
+                    Plotly.react(plotElement.id, plotData.data, plotData.layout);
+                }
 
             } catch (error) {
                 console.error('Error updating plot:', error);
@@ -203,7 +203,7 @@
             }
         }
 
-        // Debounce function to prevent rapid updates
+        //debounce function to prevent rapid updates
         function debounce(func, wait) {
             let timeout;
             return function executedFunction(...args) {
@@ -216,14 +216,22 @@
             };
         }
 
-        // Debounced update function
-        const debouncedUpdate = debounce(updatePlot, 250);
+        //debounced update function
+        const debouncedUpdate = debounce(updatePlot, 100);
 
-        // Add event listeners to toggles
+        //add event listeners to toggles
         document.getElementById("proton-toggle").addEventListener("change", debouncedUpdate);
         document.getElementById("electron-toggle").addEventListener("change", debouncedUpdate);
 
-        // Prevent default form submission and page reload
+        //initial resize handler, make sure the figure css is up to date at the start
+        window.addEventListener('resize', function() {
+            const plotElement = document.querySelector('.js-plotly-plot');
+            if (plotElement) {
+                Plotly.Plots.resize(plotElement);
+            }
+        });
+
+        //prevent default form submission and page reload
         document.addEventListener('submit', (e) => {
             e.preventDefault();
         });

@@ -95,13 +95,26 @@ def plot_3D(show_proton=True, show_electron=True):
         if magnitude > 0.1:
             figure.add_trace(go.Scatter3d(x=[x_start, x_end], y=[y_start, y_end], z=[z_start, z_end], mode="lines+markers", line=dict(color="blue", width=2.5), marker=dict(size=[0, 4],), showlegend=False))
 
-    figure.add_trace(go.Scatter3d(x=[proton_position[0]], y=[proton_position[1]], z=[proton_position[2]], mode="markers", marker=dict(size=10, color="red"), name="Proton"))
-    figure.add_trace(go.Scatter3d(x=[electron_position[0]], y=[electron_position[1]], z=[electron_position[2]], mode="markers", marker=dict(size=10, color="green"), name="Electron"))
+    #add proton or electron if the toggle is on 
+    if show_proton:
+        figure.add_trace(go.Scatter3d(x=[proton_position[0]], y=[proton_position[1]], z=[proton_position[2]], mode="markers", marker=dict(size=10, color="red"), name="Proton", showlegend=True))
+    else:
+        #add an invisible proton trace to maintain consistent trace indices
+        figure.add_trace(go.Scatter3d(x=[proton_position[0]], y=[proton_position[1]], z=[proton_position[2]], mode="markers", marker=dict(size=0, color="red", opacity=0), name="Proton", showlegend=False, hoverinfo='skip', visible=False))
+    if show_electron:
+        figure.add_trace(go.Scatter3d(x=[electron_position[0]], y=[electron_position[1]], z=[electron_position[2]], mode="markers", marker=dict(size=10, color="green"), name="Electron", showlegend=True))
+    else:
+        #add an invisible electron trace to maintain consistent trace indices
+        figure.add_trace(go.Scatter3d(x=[electron_position[0]], y=[electron_position[1]], z=[electron_position[2]], mode="markers", marker=dict(size=0, color="green", opacity=0), name="Electron", showlegend=False, hoverinfo='skip', visible=False))
 
     #create and update the layout of the figure
     scene_dict = dict(xaxis=dict(range=[-75, 75]), yaxis=dict(range=[-75, 75]), zaxis=dict(range=[-75, 75], backgroundcolor="rgba(222, 226, 230, 1)"))
     figure.update_layout(scene=scene_dict, width=1000, height=1000, paper_bgcolor='rgba(222, 226, 230, 1)', plot_bgcolor='rgba(222, 226, 230, 1)', uirevision=True, transition_duration=0)
 
+    #if post is called, send plot data as JSON instead of HTML
+    if request.method == 'POST':
+        return figure.to_json()
+    
     #return the figure we created
     return pio.to_html(
         figure,
@@ -114,6 +127,7 @@ def plot_3D(show_proton=True, show_electron=True):
         }
     )
 
+#route the main page with get and post methods
 @app.route("/", methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -126,7 +140,7 @@ def index():
         except Exception as e:
             return jsonify({'error': str(e)}), 500
     else:
-        # Initial load
+        #initial load
         plot_html = plot_3D(True, True)
         return render_template("index.html", plot=plot_html)
 
