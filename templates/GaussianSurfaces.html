@@ -7,17 +7,18 @@
     <title>Electric Field Visualizer</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <style>
-        *{
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: "Source Sans Pro", "Arial", sans-serif;
         }
 
-        body{
-            background-color: #dee2e6;
+        body {
+            background-color: #212529;
         }
 
-        #banner{
+        #banner {
             background-color: #212529;
             border-bottom: 2px solid #333;
             padding: 20px;
@@ -25,25 +26,25 @@
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
 
-        #banner h1{
+        #banner h1 {
             font-size: 2em;
             color: #fefeff;
             margin-bottom: 10px;
         }
 
-        #page{
+        #page {
             list-style-type: none;
             display: flex;
             justify-content: center;
             gap: 20px;
         }
 
-        #pages a{
-        text-decoration: none;
-        color: inherit;
+        #pages a {
+            text-decoration: none;
+            color: inherit;
         }
 
-        #pages li{
+        #pages li {
             font-size: 1.2em;
             color: #0466c8;
             cursor: pointer;
@@ -53,14 +54,61 @@
             padding: 0.5em 1em 0.5em 1em;
         }
 
-        #pages li:hover{
+        #pages li:hover {
             color: #fefeff;
         }
 
-        #figure{
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .controls div {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .controls label {
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #fefeff;
+        }
+
+        .controls input,
+        .controls select,
+        .controls button {
+            padding: 8px;
+            font-size: 1em;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #fefeff;
+        }
+
+        .controls button {
+            background-color: #0466c8;
+            color: #fefeff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            margin-top: 5px;
+        }
+
+        .controls button:hover {
+            background-color: #034b87;
+        }
+
+        #plot-container {
+            margin-top: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
+            background-color: #dee2e6;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -88,12 +136,12 @@
             <input type="number" id="radius" value="25" step="5">
         </div>
         <div>
-            <label for="charge">Charge (C):</label>
-            <input type="number" id="charge" value="1.602e-19" step="1.602e-19">
+            <label for="charge">Charge (q):</label>
+            <input type="number" id="charge" value="3" step="1">
         </div>
         <button onclick="updatePlot()">Update Plot</button>
     </div>
-    
+
     <div id="plot-container">
         {{ plot | safe }}
     </div>
@@ -110,7 +158,7 @@
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(data),
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
                         document.getElementById('plot-container').innerHTML = response.plot;
                     }
