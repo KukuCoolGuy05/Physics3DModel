@@ -1,5 +1,8 @@
-import extention
+import numpy as np
 from flask import Flask, render_template, jsonify, request
+import plotly.graph_objects as go
+import plotly.io as pio
+import extention
 
 #create flask for calling the graph on a website
 app = Flask(__name__)
@@ -26,15 +29,49 @@ def gaussian_surfaces():
     if request.method == 'POST':
         try:
             data = request.get_json()
+            #extract and validate parameters
             surface_type = data.get('surface_type', 'sphere')
+            if surface_type not in ['sphere', 'cylinder', 'plane']:
+                raise ValueError(f"Invalid surface type: {surface_type}")
+                
             radius = float(data.get('radius', 25))
-            charge = float(data.get('charge', q_proton))
-            plot_html = extention.plot_gaussian_surface(surface_type, radius, charge)
+            if not (1 <= radius <= 50):
+                raise ValueError(f"Radius must be between 1 and 50, got {radius}")
+                
+            charge = float(data.get('charge', 1))
+            if not (-10 <= charge <= 10):
+                raise ValueError(f"Charge must be between -10 and 10, got {charge}")
+            
+            #generate the plot
+            figure = extention.plot_gaussian_surface(surface_type, radius, charge)
+            plot_html = pio.to_html(
+                figure,
+                full_html=False,
+                include_plotlyjs='cdn',
+                config={
+                    'displayModeBar': True,
+                    'responsive': True,
+                    'scrollZoom': True
+                }
+            )
+            
             return jsonify({'plot': plot_html, 'status': 'success'})
+            
         except Exception as e:
-            return jsonify({'error': str(e)}), 500
+            return jsonify({'error': str(e), 'status': 'error'}), 500
     else:
-        plot_html = extention.plot_gaussian_surface()
+        #initial plot for GET request
+        figure = extention.plot_gaussian_surface()
+        plot_html = pio.to_html(
+            figure,
+            full_html=False,
+            include_plotlyjs='cdn',
+            config={
+                'displayModeBar': True,
+                'responsive': True,
+                'scrollZoom': True
+            }
+        )
         return render_template("GaussianSurfaces.html", plot=plot_html)
 
 @app.route("/wires")

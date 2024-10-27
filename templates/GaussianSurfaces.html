@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Electric Field Visualizer</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -133,11 +134,11 @@
         </div>
         <div>
             <label for="radius">Radius (m):</label>
-            <input type="number" id="radius" value="25" step="5">
+            <input type="number" id="radius" value="15" min="1" max="30" step="5">
         </div>
         <div>
             <label for="charge">Charge (q):</label>
-            <input type="number" id="charge" value="3" step="1">
+            <input type="number" id="charge" value="3" min="-5" max="5" step="1">
         </div>
         <button onclick="updatePlot()">Update Plot</button>
     </div>
@@ -153,16 +154,31 @@
                 charge: parseFloat(document.getElementById('charge').value)
             };
 
-            $.ajax({
-                url: '/gaussian_surfaces',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                success: function (response) {
-                    if (response.status === 'success') {
-                        document.getElementById('plot-container').innerHTML = response.plot;
-                    }
+            // Show loading state
+            document.getElementById('plot-container').style.opacity = '0.5';
+
+            fetch('/gaussian_surfaces', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('plot-container').innerHTML = data.plot;
+                } else {
+                    console.error('Error updating plot:', data.error);
+                    alert('Error updating plot. Please try again.');
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error updating plot. Please try again.');
+            })
+            .finally(() => {
+                document.getElementById('plot-container').style.opacity = '1';
             });
         }
     </script>
