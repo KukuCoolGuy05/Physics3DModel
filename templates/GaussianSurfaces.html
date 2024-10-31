@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Electric Field Visualizer</title>
+    <title>Electric Field Visualizer - Gaussian Surfaces</title>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
@@ -33,11 +32,12 @@
             margin-bottom: 10px;
         }
 
-        #page {
+        #pages {
             list-style-type: none;
             display: flex;
             justify-content: center;
             gap: 20px;
+            padding: 0;
         }
 
         #pages a {
@@ -50,9 +50,7 @@
             color: #0466c8;
             cursor: pointer;
             transition: color 0.3s ease;
-            list-style-type: none;
-            display: inline-block;
-            padding: 0.5em 1em 0.5em 1em;
+            padding: 0.5em 1em;
         }
 
         #pages li:hover {
@@ -93,7 +91,8 @@
             color: #fefeff;
             cursor: pointer;
             transition: background-color 0.3s ease;
-            margin-top: 5px;
+            margin-top: 21px;
+            border: none;
         }
 
         .controls button:hover {
@@ -101,28 +100,33 @@
         }
 
         #plot-container {
-            margin-top: 20px;
+            margin: 20px auto;
+            max-width: 1200px;
+            padding: 20px;
+            background-color: #dee2e6;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 20px;
-            background-color: #dee2e6;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading {
+            opacity: 0.5;
+            pointer-events: none;
         }
     </style>
 </head>
-
 <body>
     <div id="banner">
         <h1>Electric Field Of A Gaussian Surface</h1>
         <ul id="pages">
             <li><a href="/">Proton/Electron</a></li>
-            <li><a href="/gaussian_surfaces">Gaussian surfaces</a></li>
+            <li><a href="/gaussian_surfaces">Gaussian Surfaces</a></li>
             <li><a href="/wires">Wires</a></li>
         </ul>
     </div>
+    
     <div class="controls">
         <div>
             <label for="surface-type">Surface Type:</label>
@@ -134,11 +138,11 @@
         </div>
         <div>
             <label for="radius">Radius (m):</label>
-            <input type="number" id="radius" value="15" min="1" max="30" step="5">
+            <input type="number" id="radius" value="25" min="1" max="50" step="5">
         </div>
         <div>
             <label for="charge">Charge (q):</label>
-            <input type="number" id="charge" value="3" min="-5" max="5" step="1">
+            <input type="number" id="charge" value="1" min="-5" max="5" step="1">
         </div>
         <button onclick="updatePlot()">Update Plot</button>
     </div>
@@ -146,16 +150,19 @@
     <div id="plot-container">
         {{ plot | safe }}
     </div>
+
     <script>
+        let currentPlot = null;
+
         function updatePlot() {
+            const plotContainer = document.getElementById('plot-container');
+            plotContainer.classList.add('loading');
+
             const data = {
                 surface_type: document.getElementById('surface-type').value,
                 radius: parseFloat(document.getElementById('radius').value),
                 charge: parseFloat(document.getElementById('charge').value)
             };
-
-            // Show loading state
-            document.getElementById('plot-container').style.opacity = '0.5';
 
             fetch('/gaussian_surfaces', {
                 method: 'POST',
@@ -167,10 +174,19 @@
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    document.getElementById('plot-container').innerHTML = data.plot;
+                    // Parse the plot data
+                    const plotData = JSON.parse(data.plot);
+                    
+                    // If there's an existing plot, update it
+                    if (currentPlot) {
+                        Plotly.newPlot('plot-container', plotData.data, plotData.layout, plotData.config);
+                    } else {
+                        // Create new plot if none exists
+                        currentPlot = Plotly.newPlot('plot-container', plotData.data, plotData.layout, plotData.config);
+                    }
                 } else {
                     console.error('Error updating plot:', data.error);
-                    alert('Error updating plot. Please try again.');
+                    alert('Error updating plot: ' + data.error);
                 }
             })
             .catch(error => {
@@ -178,10 +194,14 @@
                 alert('Error updating plot. Please try again.');
             })
             .finally(() => {
-                document.getElementById('plot-container').style.opacity = '1';
+                plotContainer.classList.remove('loading');
             });
         }
+
+        // Initialize the plot on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            currentPlot = document.getElementById('plot-container').firstChild;
+        });
     </script>
 </body>
-
 </html>

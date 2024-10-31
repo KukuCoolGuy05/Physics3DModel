@@ -185,19 +185,19 @@ def plot_gaussian_surface(surface_type='sphere', radius=25, charge=q_proton):
     phi = np.linspace(0, np.pi, 50)
     theta, phi = np.meshgrid(theta, phi)
     
-    if surface_type == 'sphere':
+    if surface_type == "sphere":
         x_surf = radius * np.sin(phi) * np.cos(theta)
         y_surf = radius * np.sin(phi) * np.sin(theta)
         z_surf = radius * np.cos(phi)
         
-    elif surface_type == 'cylinder':
+    elif surface_type == "cylinder":
         h = np.linspace(-50, 50, 50)
         theta, h = np.meshgrid(theta, h)
         x_surf = radius * np.cos(theta)
         y_surf = radius * np.sin(theta)
         z_surf = h
         
-    elif surface_type == 'plane':
+    elif surface_type == "plane":
         x_surf = np.linspace(-50, 50, 50)
         y_surf = np.linspace(-50, 50, 50)
         x_surf, y_surf = np.meshgrid(x_surf, y_surf)
@@ -228,13 +228,4 @@ def plot_gaussian_surface(surface_type='sphere', radius=25, charge=q_proton):
         transition_duration=0
     )
     
-    return pio.to_html(
-        figure,
-        full_html=False,
-        include_plotlyjs='cdn',
-        config={
-            'displayModeBar': True,
-            'responsive': True,
-            'scrollZoom': True
-        }
-    )
+    return figure

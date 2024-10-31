@@ -29,38 +29,36 @@ def gaussian_surfaces():
     if request.method == 'POST':
         try:
             data = request.get_json()
-            #extract and validate parameters
             surface_type = data.get('surface_type', 'sphere')
+            radius = float(data.get('radius', 25))
+            charge = float(data.get('charge', 1)) * 1.602e-19  # Convert to Coulombs
+            
+            # Input validation
             if surface_type not in ['sphere', 'cylinder', 'plane']:
                 raise ValueError(f"Invalid surface type: {surface_type}")
-                
-            radius = float(data.get('radius', 25))
             if not (1 <= radius <= 50):
                 raise ValueError(f"Radius must be between 1 and 50, got {radius}")
-                
-            charge = float(data.get('charge', 1))
-            if not (-10 <= charge <= 10):
-                raise ValueError(f"Charge must be between -10 and 10, got {charge}")
+            if not (-5 <= data.get('charge', 1) <= 5):
+                raise ValueError(f"Charge must be between -5 and 5, got {charge}")
             
-            #generate the plot
+            # Create the plot
             figure = extention.plot_gaussian_surface(surface_type, radius, charge)
-            plot_html = pio.to_html(
-                figure,
-                full_html=False,
-                include_plotlyjs='cdn',
-                config={
-                    'displayModeBar': True,
-                    'responsive': True,
-                    'scrollZoom': True
-                }
-            )
             
-            return jsonify({'plot': plot_html, 'status': 'success'})
+            # Convert the figure to JSON
+            plot_json = figure.to_json()
+            
+            return jsonify({
+                'status': 'success',
+                'plot': plot_json
+            })
             
         except Exception as e:
-            return jsonify({'error': str(e), 'status': 'error'}), 500
+            return jsonify({
+                'status': 'error',
+                'error': str(e)
+            }), 500
     else:
-        #initial plot for GET request
+        # Initial plot for GET request
         figure = extention.plot_gaussian_surface()
         plot_html = pio.to_html(
             figure,
@@ -73,6 +71,7 @@ def gaussian_surfaces():
             }
         )
         return render_template("GaussianSurfaces.html", plot=plot_html)
+
 
 @app.route("/wires")
 def wires():
